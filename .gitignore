@@ -1,0 +1,22 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+.venv/
+venv/
+
+# macOS junk
+.DS_Store
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Parquet / JSON data output
+backend/data_store/*/*
+
+# IDE configs (optional)
+.vscode/
+.idea/

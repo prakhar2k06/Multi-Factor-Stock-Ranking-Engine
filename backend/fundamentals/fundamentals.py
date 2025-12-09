@@ -51,25 +51,32 @@ class FundamentalCalculator:
 
         return equity
     
-    def get_book_value(self, ticker):
+    def get_book_value_per_share(self, ticker):
         fundamentals = self.provider.get_fundamentals(ticker)
         bv = fundamentals.get("bookValue")
         if bv is not None:
             return bv
     
         bs = self.provider.get_balance_sheet(ticker)
-        bv = None
+        equity = None
         if "stockholders_equity" in bs.index:
             val = bs.loc["stockholders_equity"].iloc[0]
             if pd.notna(val):
-                bv = val
+                equity = val
 
-        if bv is None and "common_stock_equity" in bs.index:
+        if equity is None and "common_stock_equity" in bs.index:
             val = bs.loc["common_stock_equity"].iloc[0]
             if pd.notna(val):
-                bv = val
+                equity = val
                 
-        return bv
+        if equity is None:
+            return None
+        
+        shares = self.get_outstanding_shares(ticker)
+        if shares is None or shares == 0:
+            return None
+        
+        return equity / shares
 
     def get_market_cap(self, ticker):
         fundamentals = self.provider.get_fundamentals(ticker)
@@ -117,7 +124,7 @@ class FundamentalCalculator:
         market_df = market_df.reset_index()
         market_df["spy_returns"] = market_df["close"].pct_change()
 
-        merged = stock_df.merge(market_df, on="date", how="inner")
+        merged = stock_df.join(market_df[["spy_returns"]], how="inner")
         merged = merged.dropna(subset=["stock_returns", "spy_returns"])
 
         cov = merged["stock_returns"].cov(merged["spy_returns"])
@@ -135,15 +142,12 @@ class FundamentalCalculator:
             return price_to_book
 
         price = self.get_latest_price(ticker)
-        shares = self.get_outstanding_shares(ticker)
-        book_value = self.get_book_value(ticker)
+        book_value_per_share = self.get_book_value_per_share(ticker)
         
-        if price is None or shares is None or shares == 0 or book_value is None:
+        if book_value_per_share == 0 or book_value_per_share is None:
             return None
         
-        book_value_per_share = book_value / shares
-
-        if book_value_per_share == 0:
+        if price is None:
             return None
         
         return price/book_value_per_share
@@ -165,29 +169,17 @@ class FundamentalCalculator:
         vol = recent["returns"].std() * (252**0.5)
 
         return vol
-    
-    def get_book_value_per_share(self, ticker):
-        book_value = self.get_book_value(ticker)
-        shares = self.get_outstanding_shares(ticker)
-        if book_value is None or shares is None:
-            return None
-
-        if shares == 0:
-            return None
-        
-        if book_value <= 0:
-            return None
-        
-        return book_value / shares
-    
+       
     def get_momentum(self, ticker):
         df = self.provider.get_price_history(ticker)
         if df is None or df.empty:
             return None
         
-        if len(df) > 252:
+        if len(df) < 252:
             return None
         
+        df = df.dropna(subset=["close"])
+
         try:
             price_12m_ago = df["close"].iloc[-252]
             price_1m_ago = df["close"].iloc[-21]

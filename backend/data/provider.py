@@ -27,117 +27,86 @@ from backend.data.cleaner import (
 )
 
 class Provider:
-    def get_price_history(self, ticker):
-        start = "2010-01-01"
-        end = None 
-        raw_df=fetch_price_history(ticker, start, end)
-        if raw_df is None or raw_df.empty:
-            raise ValueError(f"Could not fetch price_history for {ticker.ticker}")
+    def __init__(self, data_store):
+        self.store = data_store
+
+    def load_fetch_df(self, ticker, category, fetch, clean):
+        cache = self.store.load_df(ticker, category)
+        if cache is not None:
+            return cache
+        
         try:
-            clean_df=clean_price_history(raw_df)
+            raw = fetch(ticker)
         except Exception as e:
-            raise ValueError(f"Could not clean price_history for {ticker.ticker}: {e}")
-        return clean_df
+            raise RuntimeError(f"Failed to fetch {category} for {ticker}: {e}")
+        
+        if raw is None:
+            raise RuntimeError(f"{category} for {ticker} returned None")
+        
+        clean = clean(raw)
+
+        try:
+            self.store.save_df(ticker, category, clean)
+        except Exception as e:
+            print(f"Could not save {category} for {ticker}. Error: {e}")
+
+        return clean
+
+    def load_fetch_json(self, ticker, category, fetch, clean):
+        cache = self.store.load_json(ticker, category)
+        if cache is not None:
+            return cache
+        
+        try:
+            raw = fetch(ticker)
+        except Exception as e:
+            raise RuntimeError(f"Failed to fetch {category} for {ticker}: {e}")
+        
+        if raw is None:
+            raise RuntimeError(f"{category} for {ticker} returned None")
+        
+        clean = clean(raw)
+
+        try:
+            self.store.save_json(ticker, category, clean)
+        except Exception as e:
+            print(f"Could not save {category} for {ticker}. Error: {e}")
+
+        return clean
+
+
+    def get_price_history(self, ticker):
+        return self.load_fetch_df(ticker, "price_history", lambda t: fetch_price_history(t, "2010-01-01", None), clean_price_history)
     
     def get_fundamentals(self, ticker):
-        raw_df = fetch_fundamentals(ticker)
-        if raw_df is None or raw_df.empty:
-            raise ValueError(f"Could not fetch fundamentals for {ticker.ticker}: {e}")
-        try:
-            clean_df = clean_fundamentals(raw_df)
-        except Exception as e:
-            raise ValueError(f"Could not clean fundamentals for {ticker.ticker}")
-        return clean_df
+        return self.load_fetch_json(ticker, "fundamentals", fetch_fundamentals, clean_fundamentals)
     
     def get_balance_sheet(self, ticker):
-        raw_df = fetch_balance_sheet(ticker)
-        if raw_df is None or raw_df.empty:
-            raise ValueError(f"Could not fetch balance_sheet for {ticker.ticker}")
-        try:
-            clean_df = clean_balance_sheet(raw_df)
-        except Exception as e:
-            raise ValueError(f"Could not clean balance_sheet for {ticker.ticker}: {e}")
-        return clean_df
+        return self.load_fetch_df(ticker, "balance_sheet", fetch_balance_sheet, clean_balance_sheet)
     
     def get_quarterly_balance_sheet(self, ticker):
-        raw_df = fetch_quarterly_balance_sheet(ticker)
-        if raw_df is None or raw_df.empty:
-            raise ValueError(f"Could not fetch quarterly_balance_sheet for {ticker.ticker}")
-        try:
-            clean_df = clean_quarterly_balance_sheet(raw_df)
-        except Exception as e:
-            raise ValueError(f"Could not clean quarterly_balance_sheet for {ticker.ticker}: {e}")
-        return clean_df
+        return self.load_fetch_df(ticker, "quarterly_balance_sheet", fetch_quarterly_balance_sheet, clean_quarterly_balance_sheet)
     
     def get_income_statement(self, ticker):
-        raw_df = fetch_income_statement(ticker)
-        if raw_df is None or raw_df.empty:
-            raise ValueError(f"Could not fetch income_statement for {ticker.ticker}")
-        try:
-            clean_df = clean_income_statement(raw_df)
-        except Exception as e:
-            raise ValueError(f"Could not clean income_statement for {ticker.ticker}: {e}")
-        return clean_df
+        return self.load_fetch_df(ticker, "income_statement", fetch_income_statement, clean_income_statement)
 
     def get_quarterly_income_statement(self, ticker):
-        raw_df = fetch_quarterly_income_statement(ticker)
-        if raw_df is None or raw_df.empty:
-            raise ValueError(f"Could not fetch quarterly_income_statement for {ticker.ticker}")
-        try:
-            clean_df = clean_quarterly_income_statement(raw_df)
-        except Exception as e:
-            raise ValueError(f"Could not clean quarterly_income_statement for {ticker.ticker}: {e}")
-        return clean_df
+        return self.load_fetch_df(ticker, "quarterly_income_statement", fetch_quarterly_income_statement, clean_quarterly_income_statement)
 
     def get_ttm_income_statement(self, ticker):
-        raw_df = fetch_ttm_income_statement(ticker)
-        if raw_df is None or raw_df.empty:
-            raise ValueError(f"Could not fetch ttm_income_statement for {ticker.ticker}")
-        try:
-            clean_df = clean_ttm_income_statement(raw_df)
-        except Exception as e:
-            raise ValueError(f"Could not clean ttm_income_statement for {ticker.ticker}: {e}")
-        return clean_df
-    
+        return self.load_fetch_df(ticker, "ttm_income_statement", fetch_ttm_income_statement, clean_ttm_income_statement)
+        
     def get_cashflow(self, ticker):
-        raw_df = fetch_cashflow(ticker)
-        if raw_df is None or raw_df.empty:
-            raise ValueError(f"Could not fetch cashflow for {ticker.ticker}")
-        try:
-            clean_df = clean_cashflow(raw_df)
-        except Exception as e:
-            raise ValueError(f"Could not clean cashflow for {ticker.ticker}: {e}")
-        return clean_df
-    
+        return self.load_fetch_df(ticker, "cashflow", fetch_cashflow, clean_cashflow)
+        
     def get_quarterly_cashflow(self, ticker):
-        raw_df = fetch_quarterly_cashflow(ticker)
-        if raw_df is None or raw_df.empty:
-            raise ValueError(f"Could not fetch quarterly_cashflow for {ticker.ticker}")
-        try:
-            clean_df = clean_quarterly_cashflow(raw_df)
-        except Exception as e:
-            raise ValueError(f"Could not clean quarterly_cashflow for {ticker.ticker}: {e}")
-        return clean_df
-    
+        return self.load_fetch_df(ticker, "quarterly_cashflow", fetch_quarterly_cashflow, clean_quarterly_cashflow)
+        
     def get_ttm_cashflow(self, ticker):
-        raw_df = fetch_ttm_cashflow(ticker)
-        if raw_df is None or raw_df.empty:
-            raise ValueError(f"Could not fetch ttm_cashflow for {ticker.ticker}")
-        try:
-            clean_df = clean_ttm_cashflow(raw_df)
-        except Exception as e:
-            raise ValueError(f"Could not clean ttm_cashflow for {ticker.ticker}: {e}")
-        return clean_df
+        return self.load_fetch_df(ticker, "ttm_cashflow", fetch_ttm_cashflow, clean_ttm_cashflow)
     
     def get_metadata(self, ticker):
-        raw_df = fetch_metadata(ticker)
-        if raw_df is None or raw_df.empty:
-            raise ValueError(f"Could not fetch metadata for {ticker.ticker}")
-        try:
-            clean_df = clean_metadata(raw_df)
-        except Exception as e:
-             raise ValueError(f"Could not clean metadata for {ticker.ticker}: {e}")
-        return clean_df
+        return self.load_fetch_json(ticker, "metadata", fetch_metadata, clean_metadata)
     
     def get_all_data(self, ticker):
         data = {

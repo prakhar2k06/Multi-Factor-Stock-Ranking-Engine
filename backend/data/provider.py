@@ -38,19 +38,19 @@ class Provider:
         try:
             raw = fetch(ticker)
         except Exception as e:
-            raise RuntimeError(f"Failed to fetch {category} for {ticker}: {e}")
+            raise RuntimeError(f"Failed to fetch {category} for {ticker.ticker}: {e}")
         
         if raw is None:
-            raise RuntimeError(f"{category} for {ticker} returned None")
+            raise RuntimeError(f"{category} for {ticker.ticker} returned None")
         
-        clean = clean(raw)
+        cleaned = clean(raw)
 
         try:
-            self.store.save_df(ticker, category, clean)
+            self.store.save_df(ticker, category, cleaned)
         except Exception as e:
-            print(f"Could not save {category} for {ticker}. Error: {e}")
+            print(f"Could not save {category} for {ticker,ticker}. Error: {e}")
 
-        return clean
+        return cleaned
 
     def load_fetch_json(self, ticker, category, fetch, clean):
         cache = self.store.load_json(ticker, category)
@@ -60,19 +60,19 @@ class Provider:
         try:
             raw = fetch(ticker)
         except Exception as e:
-            raise RuntimeError(f"Failed to fetch {category} for {ticker}: {e}")
+            raise RuntimeError(f"Failed to fetch {category} for {ticker.ticker}: {e}")
         
         if raw is None:
-            raise RuntimeError(f"{category} for {ticker} returned None")
+            raise RuntimeError(f"{category} for {ticker.ticker} returned None")
         
-        clean = clean(raw)
+        cleaned = clean(raw)
 
         try:
-            self.store.save_json(ticker, category, clean)
+            self.store.save_json(ticker, category, cleaned)
         except Exception as e:
-            print(f"Could not save {category} for {ticker}. Error: {e}")
+            print(f"Could not save {category} for {ticker.ticker}. Error: {e}")
 
-        return clean
+        return cleaned
 
 
     def get_price_history(self, ticker):

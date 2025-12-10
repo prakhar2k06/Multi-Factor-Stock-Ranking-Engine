@@ -40,14 +40,14 @@ class FundamentalCalculator:
         balance_sheet_df = self.provider.get_balance_sheet(ticker)
         equity = None
         if "stockholders_equity" in balance_sheet_df.index:
-            val = balance_sheet_df.loc["stockholders_equity"].iloc[0]
-            if pd.notna(val):
-                equity = val
+            row = balance_sheet_df.loc["stockholders_equity"].iloc[0]
+            if row.size > 0 and pd.notna(row.iloc[0]):
+                equity = row.iloc[0]
 
         if equity is None and "common_stock_equity" in balance_sheet_df.index:
-            val = balance_sheet_df.loc["common_stock_equity"].iloc[0]
-            if pd.notna(val):
-                equity = val
+            row = balance_sheet_df.loc["common_stock_equity"]
+            if row.size > 0 and pd.notna(row.iloc[0]):
+                equity = row.iloc[0]
 
         return equity
     
@@ -60,14 +60,14 @@ class FundamentalCalculator:
         bs = self.provider.get_balance_sheet(ticker)
         equity = None
         if "stockholders_equity" in bs.index:
-            val = bs.loc["stockholders_equity"].iloc[0]
-            if pd.notna(val):
-                equity = val
+            row = bs.loc["stockholders_equity"]
+            if row.size > 0 and pd.notna(row.iloc[0]):
+                equity = row.iloc[0]
 
         if equity is None and "common_stock_equity" in bs.index:
-            val = bs.loc["common_stock_equity"].iloc[0]
-            if pd.notna(val):
-                equity = val
+            row = bs.loc["common_stock_equity"]
+            if row.size > 0 and pd.notna(row.iloc[0]):
+                equity = row.iloc[0]
                 
         if equity is None:
             return None

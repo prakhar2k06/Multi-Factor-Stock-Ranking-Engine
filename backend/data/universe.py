@@ -1,14 +1,37 @@
 import pandas as pd
 import yfinance as yf
 
-import os
-import pandas as pd
+def load_sp500_universe(path="backend/data/sp_500.csv"):
+    df = pd.read_csv(path)
 
-def load_sp500_universe():
-    base_dir = os.path.dirname(__file__)
-    csv_path = os.path.join(base_dir, "sp500.csv")
+    # Get ticker column (Symbol / Ticker / first col)
+    for col in ["Symbol", "Ticker"]:
+        if col in df.columns:
+            tickers = df[col]
+            break
+    else:
+        tickers = df.iloc[:, 0]
 
-    df = pd.read_csv(csv_path, header=None)   # <-- IMPORTANT: no header
-    tickers = df[0].astype(str).str.strip().tolist()
+    tickers = (
+        tickers
+        .astype(str)
+        .str.strip()
+        .str.upper()
+        .unique()
+        .tolist()
+    )
 
-    return tickers
+    clean_list = []
+
+    for t in tickers:
+        t = t.replace(".", "-")
+        try:
+            hist = yf.Ticker(t).history(period="1mo")
+            if hist is not None and not hist.empty:
+                clean_list.append(t)     # VALID TICKER
+        except:
+            pass   # ignore invalid tickers
+
+    return clean_list
+
+

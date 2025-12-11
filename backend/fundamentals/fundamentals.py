@@ -9,6 +9,8 @@ class FundamentalCalculator:
         price_df = self.provider.get_price_history(ticker)
         if price_df is None or price_df.empty:
             return None
+        if "close" not in price_df.columns:
+            return None
         return price_df["close"].iloc[-1]
     
     def get_outstanding_shares(self, ticker):
@@ -19,37 +21,57 @@ class FundamentalCalculator:
             return shares
 
         bs = self.provider.get_balance_sheet(ticker)
-        if "share_issued" in bs.index:
-            val = bs.loc["share_issued"].iloc[0]
-            if pd.notna(val):
-                return val
+        try:
+            if "share_issued" in bs.index:
+                row = bs.loc["share_issued"]
+                if len(row) > 0 and pd.notna(row.iloc[0]):
+                    return row.iloc[0]
+        except Exception:
+            pass
 
         return None
 
     def get_net_income(self, ticker):
-        inc = self.provider.get_income_statement(ticker)
-        ni = inc.loc["net_income"].iloc[0]
+        try:
+            inc = self.provider.get_income_statement(ticker)
+            if "net_income" in inc.index:
+                val = inc.loc["net_income"]
+                if len(val) > 0 and pd.notna(val.iloc[0]):
+                    return val.iloc[0]
+        except Exception:
+            pass
 
-        if pd.isna(ni):
+        try:
             ttm = self.provider.get_ttm_income_statement(ticker)
-            ni = ttm.loc["net_income"].iloc[0]
+            if "net_income" in ttm.index:
+                val = ttm.loc["net_income"]
+                if len(val) > 0 and pd.notna(val.iloc[0]):
+                    return val.iloc[0]
+        except Exception:
+            pass
 
-        return None if pd.isna(ni) else ni
+        return None
 
     def get_equity(self, ticker):
         balance_sheet_df = self.provider.get_balance_sheet(ticker)
-        equity = None
-        if "stockholders_equity" in balance_sheet_df.index:
-            row = balance_sheet_df.loc["stockholders_equity"].iloc[0]
-            if row.size > 0 and pd.notna(row.iloc[0]):
-                equity = row.iloc[0]
 
-        if equity is None and "common_stock_equity" in balance_sheet_df.index:
-            row = balance_sheet_df.loc["common_stock_equity"]
-            if row.size > 0 and pd.notna(row.iloc[0]):
-                equity = row.iloc[0]
+        try:
+            if "stockholders_equity" in balance_sheet_df.index:
+                row = balance_sheet_df.loc["stockholders_equity"]
+                if len(row) > 0 and pd.notna(row.iloc[0]):
+                    return row.iloc[0]
+        except Exception:
+            pass
 
-        return equity
+        try:
+            if "common_stock_equity" in balance_sheet_df.index:
+                row = balance_sheet_df.loc["common_stock_equity"]
+                if len(row) > 0 and pd.notna(row.iloc[0]):
+                    return row.iloc[0]
+        except Exception:
+            pass
+
+        return None
     
     def get_book_value_per_share(self, ticker):
         fundamentals = self.provider.get_fundamentals(ticker)
@@ -57,17 +79,7 @@ class FundamentalCalculator:
         if bv is not None:
             return bv
     
-        bs = self.provider.get_balance_sheet(ticker)
-        equity = None
-        if "stockholders_equity" in bs.index:
-            row = bs.loc["stockholders_equity"]
-            if row.size > 0 and pd.notna(row.iloc[0]):
-                equity = row.iloc[0]
-
-        if equity is None and "common_stock_equity" in bs.index:
-            row = bs.loc["common_stock_equity"]
-            if row.size > 0 and pd.notna(row.iloc[0]):
-                equity = row.iloc[0]
+        equity = self.get_equity(ticker)
                 
         if equity is None:
             return None
@@ -116,11 +128,15 @@ class FundamentalCalculator:
             return beta
         
         stock_df = self.provider.get_price_history(ticker)
+        if stock_df is None or stock_df.empty or "close" not in stock_df.columns:
+            return None
         stock_df = stock_df.reset_index()
         stock_df["stock_returns"] = stock_df["close"].pct_change()
 
         spy = yf.Ticker("SPY")
         market_df = self.provider.get_price_history(spy)
+        if market_df is None or market_df.empty or "close" not in market_df.columns:
+            return None
         market_df = market_df.reset_index()
         market_df["spy_returns"] = market_df["close"].pct_change()
 
@@ -144,10 +160,7 @@ class FundamentalCalculator:
         price = self.get_latest_price(ticker)
         book_value_per_share = self.get_book_value_per_share(ticker)
         
-        if book_value_per_share == 0 or book_value_per_share is None:
-            return None
-        
-        if price is None:
+        if book_value_per_share == 0 or book_value_per_share is None or price is None:
             return None
         
         return price/book_value_per_share
@@ -161,6 +174,9 @@ class FundamentalCalculator:
         
     def get_volatility(self, ticker):
         df = self.provider.get_price_history(ticker)
+        if df is None or df.empty or "close" not in df.columns:
+            return None
+        
         df["returns"] = df["close"].pct_change()
         recent = df.tail(252)
         recent = recent.dropna(subset=["returns"])
@@ -172,7 +188,7 @@ class FundamentalCalculator:
        
     def get_momentum(self, ticker):
         df = self.provider.get_price_history(ticker)
-        if df is None or df.empty:
+        if df is None or df.empty or "close" not in df.columns:
             return None
         
         if len(df) < 252:
@@ -191,9 +207,3 @@ class FundamentalCalculator:
         
         else:
             return (price_1m_ago / price_12m_ago) - 1
-        
-
-        
-
-
-

@@ -171,7 +171,180 @@ class FundamentalCalculator:
             return None
         
         return 1 / price_to_book
+    
+    def get_ep(self, ticker):
+        ni = self.get_net_income(ticker)
+        mc = self.get_market_cap(ticker)
+        if ni is None or mc is None or mc == 0:
+            return None
+        return ni / mc
+    
+    def get_cash_flow(self, ticker):
+        try:
+            cf = self.provider.get_cashflow(ticker)
+            if "free_cash_flow" in cf.index:
+                val = cf.loc["free_cash_flow"].iloc[0]
+                if pd.notna(val): return val
+        except:
+            pass
+
+        try:
+            ttm = self.provider.get_ttm_cashflow(ticker)
+            if "free_cash_flow" in ttm.index:
+                val = ttm.loc["free_cash_flow"].iloc[0]
+                if pd.notna(val):
+                    return val
+        except Exception:
+            pass
+
+        return None
+    
+    def get_cp(self, ticker):
+        cf = self.get_cash_flow(ticker)
+        mc = self.get_market_cap(ticker)
+        if cf is None or mc is None or mc == 0:
+            return None
+        return cf / mc
+
+    def get_sales(self, ticker):
+        try:
+            inc = self.provider.get_income_statement(ticker)
+            if "total_revenue" in inc.index:
+                val = inc.loc["total_revenue"].iloc[0]
+                if pd.notna(val): 
+                    return val
+        except Exception:
+            pass
         
+        return None
+
+    def get_sp(self, ticker):
+        sales = self.get_sales(ticker)
+        mc = self.get_market_cap(ticker)
+        if sales is None or mc is None or mc == 0:
+            return None
+        return sales / mc
+    
+    def get_gross_profit(self, ticker):
+        try:
+            inc = self.provider.get_income_statement(ticker)
+            if "gross_profit" in inc.index:
+                row = inc.loc["gross_profit"]
+                if len(row) > 0 and pd.notna(row.iloc[0]):
+                    return row.iloc[0]
+        except Exception:
+            pass
+
+        try:
+            ttm = self.provider.get_ttm_income_statement(ticker)
+            if "gross_profit" in ttm.index:
+                row = ttm.loc["gross_profit"]
+                if len(row) > 0 and pd.notna(row.iloc[0]):
+                    return row.iloc[0]
+        except Exception:
+            pass
+
+        return None
+    
+    def get_total_assets(self, ticker):
+        try:
+            bs = self.provider.get_balance_sheet(ticker)
+            if "total_assets" in bs.index:
+                row = bs.loc["total_assets"]
+                if len(row) > 0 and pd.notna(row.iloc[0]):
+                    return row.iloc[0]
+        except Exception:
+            pass
+
+        try:
+            qbs = self.provider.get_quarterly_balance_sheet(ticker)
+            if "total_assets" in qbs.index:
+                row = qbs.loc["total_assets"]
+                if len(row) > 0 and pd.notna(row.iloc[0]):
+                    return row.iloc[0]
+        except Exception:
+            pass
+
+        return None
+
+    def get_total_debt(self, ticker):
+        try:
+            bs = self.provider.get_balance_sheet(ticker)
+            if "total_debt" in bs.index:
+                row = bs.loc["total_debt"]
+                if len(row) > 0 and pd.notna(row.iloc[0]):
+                    return row.iloc[0]
+        except Exception:
+            pass
+
+        try:
+            qbs = self.provider.get_quarterly_balance_sheet(ticker)
+            if "total_debt" in qbs.index:
+                row = qbs.loc["total_debt"]
+                if len(row) > 0 and pd.notna(row.iloc[0]):
+                    return row.iloc[0]
+        except Exception:
+            pass
+
+        return None
+
+    def get_total_revenue(self, ticker):
+        try:
+            inc = self.provider.get_income_statement(ticker)
+            if "total_revenue" in inc.index:
+                row = inc.loc["total_revenue"]
+                if len(row) > 0 and pd.notna(row.iloc[0]):
+                    return row.iloc[0]
+        except Exception:
+            pass
+
+        try:
+            ttm = self.provider.get_ttm_income_statement(ticker)
+            if "total_revenue" in ttm.index:
+                row = ttm.loc["total_revenue"]
+                if len(row) > 0 and pd.notna(row.iloc[0]):
+                    return row.iloc[0]
+        except Exception:
+            pass
+
+        return None
+
+
+    def get_gross_profitability(self, ticker):
+        gross_profit = self.get_gross_profit(ticker)
+        total_assets = self.get_total_assets(ticker)
+
+        if gross_profit is None or total_assets is None or total_assets == 0:
+            return None
+
+        return gross_profit / total_assets
+    
+    def get_leverage(self, ticker):
+        total_debt = self.get_total_debt(ticker)
+        total_assets = self.get_total_assets(ticker)
+
+        if total_debt is None or total_assets is None or total_assets == 0:
+            return None
+        
+        return total_debt / total_assets
+    
+    def get_profit_margin(self, ticker): 
+        try:
+            fundamentals = self.provider.get_fundamentals(ticker)
+            pm = fundamentals.get("profitMargins")
+            if pm is not None:
+                return pm
+        except Exception:
+            pass
+
+        net_income = self.get_net_income(ticker)
+        revenue = self.get_total_revenue(ticker)
+
+        if net_income is None or revenue is None or revenue == 0:
+            return None
+
+        return net_income / revenue
+
     def get_volatility(self, ticker):
         df = self.provider.get_price_history(ticker)
         if df is None or df.empty or "close" not in df.columns:
@@ -185,6 +358,17 @@ class FundamentalCalculator:
         vol = recent["returns"].std() * (252**0.5)
 
         return vol
+    
+    def get_vol_180(self, ticker):
+        df = self.provider.get_price_history(ticker)
+        if df is None or df.empty or "close" not in df.columns:
+            return None
+        
+        df["returns"] = df["close"].pct_change()
+        recent = df.tail(180)
+        if len(recent) < 60: return None
+        return recent["returns"].std() * (252**0.5)
+
        
     def get_momentum(self, ticker):
         df = self.provider.get_price_history(ticker)
@@ -207,3 +391,49 @@ class FundamentalCalculator:
         
         else:
             return (price_1m_ago / price_12m_ago) - 1
+        
+    def get_6m_momentum(self, ticker):
+        df = self.provider.get_price_history(ticker)
+        if df is None or df.empty or "close" not in df.columns:
+            return None
+        
+        if len(df) < 126:
+            return None
+        
+        df = df.dropna(subset=["close"])
+
+        try:
+            price_6m_ago = df["close"].iloc[-126]
+            price_1m_ago = df["close"].iloc[-21]
+        except Exception:
+            return None
+        
+        if price_6m_ago is None or price_6m_ago == 0:
+            return None
+        
+        else:
+            return (price_1m_ago / price_6m_ago) - 1
+        
+
+    def get_3m_momentum(self, ticker):
+        df = self.provider.get_price_history(ticker)
+        if df is None or df.empty or "close" not in df.columns:
+            return None
+        
+        if len(df) < 63:
+            return None
+        
+        df = df.dropna(subset=["close"])
+
+        try:
+            price_3m_ago = df["close"].iloc[-63]
+            price_1m_ago = df["close"].iloc[-21]
+        except Exception:
+            return None
+        
+        if price_3m_ago is None or price_3m_ago == 0:
+            return None
+        
+        else:
+            return (price_1m_ago / price_3m_ago) - 1
+        

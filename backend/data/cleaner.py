@@ -20,7 +20,7 @@ def is_float(string):
 
 
 def clean_fundamentals(f_dict):
-    keys_selected = ["marketCap", "bookValue", "priceToBook", "returnOnEquity", "profitMargins", "operatingMargins", "revenueGrowth", "earningsGrowth", "shortName", "longName", "sector", "industry", "country", "currency", "sharesOutstanding", "beta", "currentPrice", "bookValue"]
+    keys_selected = ["marketCap", "bookValue", "priceToBook", "returnOnEquity", "profitMargins", "operatingMargins", "revenueGrowth", "earningsGrowth", "shortName", "longName", "sector", "industry", "country", "currency", "sharesOutstanding", "beta", "currentPrice", "grossMargins", "ebitdaMargins"]
     clean_dict = {key: f_dict[key] for key in keys_selected if key in f_dict}
     for key in clean_dict:
         if isinstance(clean_dict[key], (int, float)):
@@ -117,7 +117,6 @@ def clean_metadata(m_dict):
         if is_float(clean_dict[key]):
             clean_dict[key] = float(clean_dict[key])
     return clean_dict
-
 
 
 

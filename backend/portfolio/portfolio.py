@@ -18,22 +18,22 @@ class PortfolioConstructor:
         composite = {}
 
         for ticker in self.factor_calc.universe:
-            ticker_symbol = ticker.ticker
+            ticker = ticker
             score_sum = 0
             count = 0
 
             for factor, score in self.scores.items():
-                value = score.get(ticker_symbol)
+                value = score.get(ticker)
                 if value is None:
                     continue
 
-                score_sum = value * weights[factor]
+                score_sum += value * weights[factor]
                 count += 1 
 
             if count == 0:
                 continue
             
-            composite[ticker_symbol] = score_sum
+            composite[ticker] = score_sum
 
         return composite
     

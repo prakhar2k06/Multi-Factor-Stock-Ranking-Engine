@@ -1,3 +1,10 @@
+"""
+ranking_engine.py
+
+Combines multiple factor scores into a single composite ranking.
+Responsible for weight normalization, score aggregation, and final ranking.
+"""
+
 class RankingEngine:
     def __init__(self, factor_calculator):
         self.factor_calc = factor_calculator
@@ -15,6 +22,12 @@ class RankingEngine:
         return self.scores
     
     def compute_composite_scores(self, weights: dict):
+        """
+        Combine factor scores into a single score per stock.
+        Factor weights are normalized to add up to 1.
+        """
+
+        # Normalize weights to sum to 1
         total_w = sum(weights.values())
         if total_w == 0:
             n = len(weights)
@@ -45,9 +58,15 @@ class RankingEngine:
         return composite
     
     def rank_stocks(self, composite_scores):
+        """
+        Rank stocks by composite score (highest to lowest).
+        """
         return sorted(composite_scores.items(), key = lambda x: x[1], reverse = True)
     
     def top_n(self, n, weights):
+        """
+        Method that returns top-N ranked stocks.
+        """
         if not self.scores:
             self.load_factor_scores()
 

@@ -1,11 +1,20 @@
+"""
+fetcher.py
+
+Thin data access layer for pulling raw financial data from Yahoo Finance.
+No caching, validation, or transformations are performed here.
+"""
+
 import yfinance as yf
 
 def fetch_price_history(ticker_object: yf.ticker, start_date: str, end_date: str):
+    """Fetch historical OHLC price data."""
     ticker_symbol = ticker_object.ticker
     ohlc_data = yf.download(ticker_symbol, start = start_date, end = end_date)
     return ohlc_data
 
 def fetch_fundamentals(ticker_object: yf.Ticker):
+    """Fetch general company fundamentals and metadata."""
     fundamentals = ticker_object.info
     return fundamentals
 

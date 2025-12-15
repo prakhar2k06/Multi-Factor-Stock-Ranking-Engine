@@ -1,9 +1,20 @@
+"""
+storage.py
+
+File-based data cache for fetched and cleaned financial data.
+Stores per-ticker datasets to avoid repeated API calls.
+"""
+
 import os
 import json
 import pandas as pd
 import yfinance as yf
 
 class DataStore:
+    """
+    Handles persistence of fetched data (dataframes and JSON)
+    using a simple directory structure: one folder per ticker.
+    """
     def __init__(self, base_path: str = "backend/data_store"):
         self.base_path=base_path
 
@@ -17,6 +28,10 @@ class DataStore:
     def file_path(self, ticker, category: str, extension:str):
         return f"{self.base_path}/{ticker.ticker}/{category}.{extension}"
 
+    # =========================
+    # DATAFRAME STORAGE
+    # =========================
+
     def save_df(self, ticker, category: str, df: pd.DataFrame):
         self.ensure_dir(ticker)
         file_path = self.file_path(ticker, category, "parquet")
@@ -28,6 +43,10 @@ class DataStore:
             return None
         df = pd.read_parquet(file_path)
         return df
+
+    # =========================
+    # JSON STORAGE
+    # =========================
 
     def save_json(self, ticker, category: str, data: dict):
         self.ensure_dir(ticker)

@@ -1,3 +1,15 @@
+"""
+provider.py
+
+Central data access layer that coordinates:
+- fetching raw data (via fetcher)
+- cleaning and normalization (via cleaner)
+- disk caching (via DataStore)
+
+All higher-level modules should access market and fundamental data
+exclusively through Provider.
+"""
+
 from backend.data.fetcher import (
     fetch_price_history,
     fetch_fundamentals,
@@ -27,10 +39,21 @@ from backend.data.cleaner import (
 )
 
 class Provider:
+    """
+    Unified interface for data fetching, cleaning and caching data for a given ticker.
+    """
+
     def __init__(self, data_store):
         self.store = data_store
 
+    # -------------------------------
+    # Internal helpers
+    # -------------------------------
+
     def load_fetch_df(self, ticker, category, fetch, clean):
+        """
+        Loads/fetches a Dataframe Dataset with caching.
+        """
         cache = self.store.load_df(ticker, category)
         if cache is not None:
             return cache
@@ -53,6 +76,9 @@ class Provider:
         return cleaned
 
     def load_fetch_json(self, ticker, category, fetch, clean):
+        """
+        Loads/fetches a JSON Dataset with caching.
+        """
         cache = self.store.load_json(ticker, category)
         if cache is not None:
             return cache
@@ -74,6 +100,9 @@ class Provider:
 
         return cleaned
 
+    # -------------------------------
+    # Public API
+    # -------------------------------
 
     def get_price_history(self, ticker):
         return self.load_fetch_df(ticker, "price_history", lambda t: fetch_price_history(t, "2010-01-01", None), clean_price_history)

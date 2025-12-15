@@ -1,3 +1,10 @@
+"""
+main.py
+
+FastAPI entry point for the stock factor ranking system.
+Exposes endpoints for factor inspection and composite stock ranking.
+"""
+
 from fastapi import FastAPI
 from pydantic import BaseModel
 from backend.data_store.storage import DataStore
@@ -18,7 +25,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# === SYSTEM INITIALIZATION ===
+# SYSTEM INITIALIZATION
+
 store = DataStore("./data_store")
 provider = Provider(store)
 fundamentals = FundamentalCalculator(provider)
@@ -35,7 +43,8 @@ def root():
     }
 
 
-# === GET FACTOR SCORES ===
+# GET FACTOR SCORES
+
 @app.get("/factors")
 def get_factors():
     return {
@@ -48,7 +57,8 @@ def get_factors():
     }
 
 
-# === INPUT MODEL FOR WEIGHTS ===
+# INPUT MODEL FOR WEIGHTS
+
 class FactorWeights(BaseModel):
     value: float
     size: float
@@ -58,7 +68,8 @@ class FactorWeights(BaseModel):
     market_risk: float
 
 
-# === RANKING ENDPOINT ===
+# RANKING ENDPOINT
+
 @app.post("/rank")
 def rank_stocks(weights: FactorWeights):
     ranker.load_factor_scores()

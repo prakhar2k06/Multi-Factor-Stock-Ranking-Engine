@@ -1,4 +1,16 @@
+"""
+cleaner.py
+
+Data cleaning and normalization utilities for raw financial data fetched
+from Yahoo Finance. This module standardizes column names, selects
+relevant rows, coerces numeric values, and handles missing data.
+"""
+
 import pandas as pd
+
+# -------------------------------
+# Price History
+# -------------------------------
 
 def clean_price_history(ph_df):
     df = ph_df.copy()
@@ -10,14 +22,21 @@ def clean_price_history(ph_df):
     df = df.dropna()
     return df
 
+# -------------------------------
+# Helpers
+# -------------------------------
 
 def is_float(string):
+    """Checks whether a value can safely be converted to float."""
     try:
         float(string)
         return True
     except (ValueError, TypeError):
         return False
 
+# -------------------------------
+# Fundamentals 
+# -------------------------------
 
 def clean_fundamentals(f_dict):
     keys_selected = ["marketCap", "bookValue", "priceToBook", "returnOnEquity", "profitMargins", "operatingMargins", "revenueGrowth", "earningsGrowth", "shortName", "longName", "sector", "industry", "country", "currency", "sharesOutstanding", "beta", "currentPrice", "grossMargins", "ebitdaMargins"]
@@ -32,6 +51,9 @@ def clean_fundamentals(f_dict):
             clean_dict[key] = float(clean_dict[key])
     return clean_dict
     
+# -------------------------------
+# Balance sheets
+# -------------------------------
 
 def clean_balance_sheet(bs_df):
     important_rows = ["stockholders_equity", "common_stock_equity", "total_assets", "total_liabilities_net_minority_interest", "total_debt", "net_debt", "cash_and_cash_equivalents", "cash_cash_equivalents_and_short_term_investments", "ordinary_shares_number", "treasury_shares_number", "share_issued"]
@@ -52,6 +74,9 @@ def clean_quarterly_balance_sheet(qbs_df):
     df.index = df.index.map(row_map)
     return df
     
+# -------------------------------
+# Income statements
+# -------------------------------
 
 def clean_income_statement(is_df):
     important_rows=["total_revenue", "cost_of_revenue", "gross_profit", "operating_income", "ebit", "ebitda", "pretax_income", "net_income", "operating_expense", "research_and_development"]
@@ -60,6 +85,7 @@ def clean_income_statement(is_df):
     df= df.reindex(important_rows)
     df = df.apply(pd.to_numeric, errors="coerce")
     return df
+
 
 def clean_quarterly_income_statement(qis_df):
     important_rows = ["total_revenue", "cost_of_revenue", "gross_profit", "operating_income", "operating_expense", "ebit", "ebitda",  "pretax_income", "net_income", "research_and_development", "selling_general_and_administration"]
@@ -77,6 +103,10 @@ def clean_ttm_income_statement(ttmis_df):
     df= df.reindex(important_rows)
     df = df.apply(pd.to_numeric, errors="coerce")
     return df
+
+# -------------------------------
+# Cash flow statements
+# -------------------------------
 
 def clean_cashflow(cf_df):
     important_rows = ["operating_cash_flow", "free_cash_flow", "capital_expenditure", "repurchase_of_capital_stock", "issuance_of_debt", "repayment_of_debt", "stock_based_compensation", "net_income_from_continuing_operations", "change_in_working_capital"]
@@ -104,6 +134,9 @@ def clean_ttm_cashflow(ttmcf_df):
     df = df.apply(pd.to_numeric, errors="coerce")
     return df
 
+# -------------------------------
+# Metadata
+# -------------------------------
 
 def clean_metadata(m_dict):
     keys_selected = ["symbol", "longName", "currency", "exchangeName", "fullExchangeName", "fiftyTwoWeekHigh", "fiftyTwoWeekLow", "previousClose", "regularMarketTime"]

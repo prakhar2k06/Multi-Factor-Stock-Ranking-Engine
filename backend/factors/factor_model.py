@@ -1,3 +1,10 @@
+"""
+factor_model.py
+
+Computes cross-sectional factor scores for a stock universe.
+Implements multi-signal factors with winsorization and sector-neutral z-scoring.
+"""
+
 from backend.data.universe import load_sp500_universe
 import numpy as np
 import pandas as pd
@@ -5,12 +12,20 @@ import yfinance as yf
 
 class FactorCalculator:
     def __init__(self,fundamentalcalculator, provider):
+        """
+        Initialize the factor model using the fundamentals calculator and provider.
+        """
         self.fundamental = fundamentalcalculator
         self.provider = provider
+        # Universe is a list of valid S&P 500 tickers
         self.universe = [t for t in load_sp500_universe()]
+        # Precomputed sector mapping
         self.sector_map = {t: self.fundamental.get_sector(yf.Ticker(t)) for t in self.universe}
 
     def winsorize(self, raw_scores, limit = 3.0):
+        """
+        Clips extreme values using mean ± (limit × std).
+        """
         s = pd.Series(raw_scores, dtype=float)
         valid = s.dropna()
 
@@ -27,14 +42,20 @@ class FactorCalculator:
         return clipped.to_dict()
         
     def z_score_calculator(self, raw_scores):
+        """
+        Computes sector neutral Z-scores with global Z-score fallback.
+        """
         result = {}
         sector_groups = {}
+
+        # Group tickers by sector
         for t in self.universe:
             sector = self.sector_map.get(t)
             if sector is None:
                 continue
             sector_groups.setdefault(sector, []).append(t)
 
+         # Sector-level z-scoring
         for sector,tickers in sector_groups.items():
             values = {t: raw_scores.get(t) for t in tickers}
 
@@ -48,10 +69,12 @@ class FactorCalculator:
                         v = values.get(t)
                         result[t] = (v - mean) / std if v is not None else None
                     continue
-
+            
+            # If sector normalization fails, use global fallback
             for t in tickers:
                 result[t] = None
 
+        # Global fallback z-scoring
         global_s = pd.Series(raw_scores, dtype=float)   
         global_valid = global_s.dropna()
 
@@ -68,6 +91,9 @@ class FactorCalculator:
         return result
  
     def value_score_calculator(self):
+        """
+        Value factor Z-score calculation using multiple valuation signals.
+        """
         tickers = self.universe
 
         bm = {t: self.fundamental.get_book_to_market(yf.Ticker(t)) for t in tickers}
@@ -96,6 +122,9 @@ class FactorCalculator:
         return scores 
 
     def size_score_calculator(self):
+        """
+        Size factor Z-score calculation using inverse of log market capitalization.
+        """
         tickers = self.universe
 
         mc = {t: self.fundamental.get_market_cap(yf.Ticker(t)) for t in tickers}
@@ -113,6 +142,9 @@ class FactorCalculator:
         return self.z_score_calculator(mc_rev)
     
     def momentum_score_calculator(self):
+        """
+        Momentum factor Z-score calculation using momentum of different time frames.
+        """
         tickers = self.universe
 
         m12 = {t: self.fundamental.get_momentum(yf.Ticker(t)) for t in tickers}
@@ -138,6 +170,9 @@ class FactorCalculator:
         return scores
     
     def lowvol_score_calculator(self):
+        """
+        Low-vol factor Z-score calculation using inverse of volatility.
+        """
         tickers = self.universe
 
         vol252 = {t: self.fundamental.get_volatility(yf.Ticker(t)) for t in tickers}
@@ -163,6 +198,9 @@ class FactorCalculator:
         return scores
     
     def quality_score_calculator(self):
+        """
+        Quality factor Z-score calculation using profitability and leverage signals.
+        """
         tickers = self.universe
 
         roe = {t: self.fundamental.get_roe(yf.Ticker(t)) for t in tickers}
@@ -193,6 +231,9 @@ class FactorCalculator:
         return scores
     
     def market_risk_score_calculator(self):
+        """
+        Market Risk factor Z-score calculation using inverse of beta.
+        """
         tickers = self.universe
 
         beta = {t: self.fundamental.get_beta(yf.Ticker(t)) for t in tickers}

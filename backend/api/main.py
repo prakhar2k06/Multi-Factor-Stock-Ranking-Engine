@@ -31,7 +31,7 @@ store = DataStore("./data_store")
 provider = Provider(store)
 fundamentals = FundamentalCalculator(provider)
 factors = FactorCalculator(fundamentals, provider)
-ranker = RankingEngine(factors)     # <-- renamed from portfolio
+ranker = RankingEngine(factors)     
 
 
 @app.get("/")

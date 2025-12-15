@@ -215,7 +215,7 @@ class FundamentalCalculator:
                     return val
         except Exception:
             pass
-        
+
         return None
 
     def get_sp(self, ticker):
@@ -436,4 +436,16 @@ class FundamentalCalculator:
         
         else:
             return (price_1m_ago / price_3m_ago) - 1
+    
+    def get_sector(self, ticker):
+        try:
+            fundamentals = self.provider.get_fundamentals(ticker)
+            sector = fundamentals.get("sector")
+            if sector is not None:
+                return sector
+        except Exception:
+            pass
+
+        return None
+
         

@@ -1,4 +1,4 @@
-class PortfolioConstructor:
+class RankingEngine:
     def __init__(self, factor_calculator):
         self.factor_calc = factor_calculator
         self.scores = {}
@@ -15,6 +15,13 @@ class PortfolioConstructor:
         return self.scores
     
     def compute_composite_scores(self, weights: dict):
+        total_w = sum(weights.values())
+        if total_w == 0:
+            n = len(weights)
+            weights = {k: 1/n for k in weights}
+        else:
+            weights = {k: v / total_w for k, v in weights.items()}
+
         composite = {}
 
         for ticker in self.factor_calc.universe:

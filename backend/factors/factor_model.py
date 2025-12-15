@@ -8,19 +8,65 @@ class FactorCalculator:
         self.fundamental = fundamentalcalculator
         self.provider = provider
         self.universe = [t for t in load_sp500_universe()]
+        self.sector_map = {t: self.fundamental.get_sector(yf.Ticker(t)) for t in self.universe}
 
-    def z_score_calculator(self, series):
-        s = pd.Series(series, dtype=float)
-
+    def winsorize(self, raw_scores, limit = 3.0):
+        s = pd.Series(raw_scores, dtype=float)
         valid = s.dropna()
+
         if len(valid) < 2:
-            return {k: None for k in series}
+            return raw_scores
+        
+        mean = valid.mean()
+        std = valid.std()
 
-        z = (valid - valid.mean()) / valid.std()
+        upper = mean + limit * std
+        lower = mean - limit * std
 
-        result = {k: (z[k] if k in z else None) for k in series}
+        clipped = s.clip(lower,upper)
+        return clipped.to_dict()
+        
+    def z_score_calculator(self, raw_scores):
+        result = {}
+        sector_groups = {}
+        for t in self.universe:
+            sector = self.sector_map.get(t)
+            if sector is None:
+                continue
+            sector_groups.setdefault(sector, []).append(t)
+
+        for sector,tickers in sector_groups.items():
+            values = {t: raw_scores.get(t) for t in tickers}
+
+            clean_vals = {t: v for t, v in values.items() if v is not None}
+
+            if len(clean_vals) >= 2:
+                mean = np.mean(list(clean_vals.values()))
+                std = np.std(list(clean_vals.values()))
+                if std > 0:
+                    for t in tickers:
+                        v = values.get(t)
+                        result[t] = (v - mean) / std if v is not None else None
+                    continue
+
+            for t in tickers:
+                result[t] = None
+
+        global_s = pd.Series(raw_scores, dtype=float)   
+        global_valid = global_s.dropna()
+
+        if len(global_valid) >= 2:
+            global_mean = global_valid.mean()
+            global_std= global_valid.std()
+            global_z = (global_valid - global_mean) / global_std
+
+            for t in self.universe:
+                if result.get(t) is None:
+                    v = raw_scores.get(t)
+                    result[t] = global_z[t] if t in global_z else None
+                    
         return result
-
+ 
     def value_score_calculator(self):
         tickers = self.universe
 
@@ -28,6 +74,11 @@ class FactorCalculator:
         ep = {t: self.fundamental.get_ep(yf.Ticker(t)) for t in tickers}
         cp = {t: self.fundamental.get_cp(yf.Ticker(t)) for t in tickers}
         sp = {t: self.fundamental.get_sp(yf.Ticker(t)) for t in tickers}
+
+        bm = self.winsorize(bm)
+        ep = self.winsorize(ep)
+        cp = self.winsorize(cp)
+        sp = self.winsorize(sp)
 
         z_bm = self.z_score_calculator(bm)
         z_ep = self.z_score_calculator(ep)
@@ -57,6 +108,8 @@ class FactorCalculator:
             else:
                 mc_rev[t] = -np.log(m)
 
+        mc_rev = self.winsorize(mc_rev)
+
         return self.z_score_calculator(mc_rev)
     
     def momentum_score_calculator(self):
@@ -65,6 +118,10 @@ class FactorCalculator:
         m12 = {t: self.fundamental.get_momentum(yf.Ticker(t)) for t in tickers}
         m6 = {t: self.fundamental.get_6m_momentum(yf.Ticker(t)) for t in tickers}
         m3 = {t: self.fundamental.get_3m_momentum(yf.Ticker(t)) for t in tickers}
+
+        m12 = self.winsorize(m12)
+        m6 = self.winsorize(m6)
+        m3 = self.winsorize(m3)
 
         z_12 = self.z_score_calculator(m12)
         z_6 = self.z_score_calculator(m6)
@@ -89,6 +146,9 @@ class FactorCalculator:
         vol252_r = {t: (-vol252[t] if vol252[t] is not None else None) for t in tickers}
         vol180_r = {t: (-vol180[t] if vol180[t] is not None else None) for t in tickers}
 
+        vol252_r = self.winsorize(vol252_r)
+        vol180_r = self.winsorize(vol180_r)
+
         z_252 = self.z_score_calculator(vol252_r)
         z_180 = self.z_score_calculator(vol180_r)
 
@@ -112,6 +172,11 @@ class FactorCalculator:
 
         lev_rev = {t: (-lev[t] if lev[t] is not None else None) for t in lev}
 
+        roe = self.winsorize(roe)
+        gp = self.winsorize(gp)
+        pm = self.winsorize(pm)
+        lev_rev = self.winsorize(lev_rev)
+
         z_roe = self.z_score_calculator(roe)
         z_gp = self.z_score_calculator(gp)
         z_pm = self.z_score_calculator(pm)
@@ -133,6 +198,8 @@ class FactorCalculator:
         beta = {t: self.fundamental.get_beta(yf.Ticker(t)) for t in tickers}
 
         beta_rev = {t: (-beta[t] if beta[t] is not None else None) for t in beta}
+
+        beta_rev = self.winsorize(beta_rev)
 
         return self.z_score_calculator(beta_rev)
     

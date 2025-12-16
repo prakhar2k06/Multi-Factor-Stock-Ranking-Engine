@@ -96,9 +96,6 @@ Signals used:
   
 </details>
 
-
-## Methodology
-
 ## Key Features
 - Multi-factor equity ranking model
 - Sector-neutral z-scoring
@@ -107,16 +104,18 @@ Signals used:
 - REST API built with FastAPI
 - Interactive React frontend
 
-## Architecture
-Backend:
-- Data fetching & cleaning (Yahoo Finance)
-- Factor computation
-- Composite score construction
-- Stock ranking
+## System Architecture
+### Backend:
+- Python + FastAPI
+- Modular data pipeline
+  - Fetch → Clean → Cache → Compute → Rank
+- Easily extensible for new factors or universes.
 
-Frontend:
-- Factor weight controls
-- Ranked stock table (Top 20)
+### Frontend:
+- React + Material UI
+- Factor weight sliders
+- Ranked Stock Table (Top 20)
+- Communicates with backend via FastAPI
 
 ## Project Structure
 ```
@@ -183,15 +182,61 @@ Multi-Factor-Stock-Ranking-Engine/
 
 ```
 
-## Running the Project
+## Setup and Running Instructions
 
-### Backend
+### 1. Clone the repository
+```
+git clone https://github.com/prakhar2k06/Multi-Factor-Stock-Ranking-Engine.git
+cd Multi-Factor-Stock-Ranking-Engine
+```
+
+### 2. Backend Setup (FastAPI)
+
+2.1 Creating and Activating Virtual Environment
+```
+python3 -m venv .venv
+source .venv/bin/activate      # macOS / Linux
+# .venv\Scripts\activate       # Windows
+```
+2.2 Installing Backend Dependencies
+```
+pip install -r requirements.txt
+```
+2.3 Starting the Backend Server
 ```bash
 cd backend
 uvicorn api.main:app --reload
 ```
-### Frontend
+If successful you should see:
+```
+Uvicorn running on http://127.0.0.1:8000
+```
+
+### 3. Frontend Setup (React)
+
+3.1 Navigating to Frontend directory
 ```bash
 cd frontend
+```
+3.2 Install Frontend Dependencies
+```
+npm install
+```
+3.3 Start the Frontend
+```
 npm start
 ```
+This will start the frontend at:
+```
+Uvicorn running on http://127.0.0.1:8000
+```
+## Future Improvements
+- Backtesting Engine
+- Portfolio Construction
+- Additional Factors
+- Multiple Universes
+- Production Deployment
+
+## License
+
+This project is licensed under the MIT License.

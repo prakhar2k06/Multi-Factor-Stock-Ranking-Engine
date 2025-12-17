@@ -5,6 +5,7 @@ This project is a factor-based stock ranking system that ranks large-cap US equi
 
 Stocks are scored across six factors (Value, Size, Momentum, Low Volatility, Quality, Market Risk). Users can assign a custom weight to each factor which is then used to produce a list of top-N stocks based on the composite score.
 
+This project focuses on stock ranking rather than portfolio optimization or backtesting.
 ## Background: Factor Investing
 
 Factor investing is a strategy that involves investing in stocks with certain attributes that have been proven to deliver higher risk-adjusted returns than the market.
@@ -39,7 +40,7 @@ Signals used:
 
 <summary><b>Size</b></summary>
 
-Smaller-cap companies have historically exhibited higher returns that larger companies.
+Smaller-cap companies have historically exhibited higher returns than larger companies.
 
 Signals used:
 - Negative log of market capitalization
@@ -89,7 +90,7 @@ Signals used:
 
 <summary><b>Market-Risk</b></summary>
 
-Lower exposure to  market/systematic has been associated with greater and more stable returns.
+Lower exposure to  market (systematic) has been associated with greater and more stable returns.
 
 Signals used:
 - Beta
@@ -97,12 +98,13 @@ Signals used:
 </details>
 
 ## Key Features
-- Multi-factor equity ranking model
-- Sector-neutral z-scoring
-- Outlier clipping (winsorization)
-- Cached data pipeline for fast re-runs
-- REST API built with FastAPI
-- Interactive React frontend
+- **Multi-factor stock ranking model** based on academic research
+- **Multi-signal factor score evaluation** for accurate scoring
+- **Sector-neutral z-scoring** to avoid sector bias
+- **Outlier clipping (winsorization)** for robust factor signals
+- **Cached data layer** for fast re-runs
+- **FastAPI backend** with clean REST endpoints
+- **Interactive React frontend** for real-time ranking
 
 ## System Architecture
 ### Backend:
@@ -226,17 +228,44 @@ npm install
 ```
 npm start
 ```
-This will start the frontend at:
+This will launch the frontend at:
 ```
-Uvicorn running on http://127.0.0.1:8000
+http://localhost:3000
 ```
+## API Endpoints
+### Retrieve Raw Factor Scores
+```
+GET /factors
+```
+### Rank Stocks (POST)
+```
+POST /rank
+```
+Example Request Body
+```
+{
+  "value": 0.2,
+  "size": 0.2,
+  "momentum": 0.2,
+  "lowvol": 0.15,
+  "quality": 0.15,
+  "market_risk": 0.1
+}
+
+```
+
 ## Future Improvements
-- Backtesting Engine
-- Portfolio Construction
+- Historical backtesting engine
+- Portfolio Construction and weighting
 - Additional Factors
-- Multiple Universes
-- Production Deployment
+- Support for Multiple Universes
+- Production Deployment (Docker)
 
 ## License
 
 This project is licensed under the MIT License.
+
+## Disclaimer
+
+This project is for educational and research purposes only and does not constitute investment advice.
+

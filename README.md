@@ -213,7 +213,7 @@ If successful you should see:
 ```
 Uvicorn running on http://127.0.0.1:8000
 ```
-Please wait till you see before sending requests:
+Please wait till you see this before sending requests:
 ```
 INFO:     Application startup complete.
 ```

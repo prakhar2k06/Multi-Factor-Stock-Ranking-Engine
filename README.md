@@ -213,6 +213,10 @@ If successful you should see:
 ```
 Uvicorn running on http://127.0.0.1:8000
 ```
+Please wait till you see before sending requests:
+```
+INFO:     Application startup complete.
+```
 
 ### 3. Frontend Setup (React)
 
@@ -232,6 +236,9 @@ This will launch the frontend at:
 ```
 http://localhost:3000
 ```
+
+**Note: First run takes some time as data is being fetched. Subsequent runs are faster.**
+
 ## API Endpoints
 ### Retrieve Raw Factor Scores
 ```

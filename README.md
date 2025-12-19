@@ -1,5 +1,7 @@
 # Multi-Factor Stock Ranking Engine
 
+![Frontend Screenshot](assets/frontend.png)
+
 ## Overview
 This project is a factor-based stock ranking system that ranks large-cap US equities (S&P 500) using well-established investment factors.
 

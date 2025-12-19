@@ -1,22 +1,23 @@
-# Python cache
+# Python
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
 
-# Virtual environment
+# Virtual environments
 .venv/
 venv/
 
-# macOS junk
+# macOS
 .DS_Store
 
-# Jupyter
-.ipynb_checkpoints/
+# Node / React
+node_modules/
 
-# Parquet / JSON data output
-backend/data_store/*/*
+# Local data cache (runtime-generated)
+data_store/
+backend/data_store/
 
-# IDE configs (optional)
+# IDEs
 .vscode/
 .idea/

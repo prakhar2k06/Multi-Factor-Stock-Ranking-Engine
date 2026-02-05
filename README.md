@@ -208,7 +208,6 @@ pip install -r requirements.txt
 ```
 2.3 Starting the Backend Server
 ```bash
-cd backend
 uvicorn api.main:app --reload
 ```
 If successful you should see:

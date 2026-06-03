@@ -7,9 +7,9 @@ invalid or delisted tickers using a basic price-history check.
 """
 
 import pandas as pd
-import yfinance as yf
 
-def load_sp500_universe(path="backend/data/sp_500.csv"):
+
+def load_sp500_universe(path: str = "backend/data/sp_500.csv") -> list:
     """
     Loads and normalizes and validates the S&P 500 ticker universe.
     """
@@ -21,29 +21,13 @@ def load_sp500_universe(path="backend/data/sp_500.csv"):
             break
     else:
         tickers = df.iloc[:, 0]
-    # Normalize tickers
-    tickers = (
-        tickers
-        .astype(str)
+
+    return (
+        tickers.astype(str)
         .str.strip()
         .str.upper()
+        .str.replace(".", "-", regex=False)
+        .dropna()
         .unique()
         .tolist()
     )
-
-    clean_list = []
-
-    for t in tickers:
-        #Yahoo Finance format
-        t = t.replace(".", "-")
-        try:
-            hist = yf.Ticker(t).history(period="1mo")
-            if hist is not None and not hist.empty:
-                clean_list.append(t)     
-        except:
-            # Skip tickers that fail to fetch
-            pass 
-
-    return clean_list
-
-

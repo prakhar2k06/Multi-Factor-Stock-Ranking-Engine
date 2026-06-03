@@ -1,0 +1,22 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: stock-ranking-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data_store:/app/data_store
+    environment:
+      - PYTHONUNBUFFERED=1
+    
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: stock-ranking-frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend

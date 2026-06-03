@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+pydantic
+pandas
+numpy
+yfinance
+requests
+beautifulsoup4
+lxml
+pyarrow

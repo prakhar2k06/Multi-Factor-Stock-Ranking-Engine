@@ -5,131 +5,140 @@ Computes cross-sectional factor scores for a stock universe.
 Implements multi-signal factors with winsorization and sector-neutral z-scoring.
 """
 
-from backend.data.universe import load_sp500_universe
+from typing import Any
+
 import numpy as np
 import pandas as pd
-import yfinance as yf
+from pandas import Series
+
+from backend.data.universe import load_sp500_universe
+from backend.metrics.metric_builder import MetricBuilder
+
 
 class FactorCalculator:
-    def __init__(self,fundamentalcalculator, provider):
-        """
-        Initialize the factor model using the fundamentals calculator and provider.
-        """
-        self.fundamental = fundamentalcalculator
-        self.provider = provider
-        # Universe is a list of valid S&P 500 tickers
-        self.universe = [t for t in load_sp500_universe()]
-        # Precomputed sector mapping
-        self.sector_map = {t: self.fundamental.get_sector(yf.Ticker(t)) for t in self.universe}
+    def __init__(self, metric_builder: MetricBuilder) -> None:
+        self.metric_builder: MetricBuilder = metric_builder
+        raw_universe: list[str] = [t for t in load_sp500_universe()]
+        self.metrics: dict[str, dict[str, Any] | None] = (
+            self.metric_builder.load_universe_metrics(raw_universe)
+        )
+        self.universe: list[str] = [
+            t for t in raw_universe if self.metrics.get(t) is not None
+        ]
+        self.sector_map: dict[str, str] = {
+            t: self.metrics[t]["sector"]
+            for t in self.universe
+            if self.metrics[t].get("sector") is not None
+        }
 
-    def winsorize(self, raw_scores, limit = 3.0):
+    def winsorize(self, raw_scores: dict, limit: float = 3.0) -> dict:
         """
         Clips extreme values using mean ± (limit × std).
         """
-        s = pd.Series(raw_scores, dtype=float)
-        valid = s.dropna()
+        s: Series[Any] = pd.Series(raw_scores, dtype=float)
+        valid: Series[Any] = s.dropna()
 
         if len(valid) < 2:
             return raw_scores
-        
-        mean = valid.mean()
-        std = valid.std()
 
-        upper = mean + limit * std
-        lower = mean - limit * std
+        mean: float = valid.mean()
+        std: float = valid.std()
 
-        clipped = s.clip(lower,upper)
+        upper: float = mean + limit * std
+        lower: float = mean - limit * std
+
+        clipped: Series[Any] = s.clip(lower, upper)
         return clipped.to_dict()
-        
-    def z_score_calculator(self, raw_scores):
+
+    def z_score_calculator(self, raw_scores: dict) -> dict:
         """
         Computes sector neutral Z-scores with global Z-score fallback.
         """
-        result = {}
-        sector_groups = {}
+        result: dict = {}
+        sector_groups: dict = {}
 
         # Group tickers by sector
         for t in self.universe:
-            sector = self.sector_map.get(t)
+            sector: str | None = self.sector_map.get(t)
             if sector is None:
                 continue
             sector_groups.setdefault(sector, []).append(t)
 
-         # Sector-level z-scoring
-        for sector,tickers in sector_groups.items():
-            values = {t: raw_scores.get(t) for t in tickers}
+        # Sector-level z-scoring
+        for sector, tickers in sector_groups.items():
+            values: dict = {t: raw_scores.get(t) for t in tickers}
 
-            clean_vals = {t: v for t, v in values.items() if v is not None}
+            clean_vals: dict = {t: v for t, v in values.items() if v is not None}
 
             if len(clean_vals) >= 2:
-                mean = np.mean(list(clean_vals.values()))
-                std = np.std(list(clean_vals.values()))
+                mean: np.floating[Any] = np.mean(list(clean_vals.values()))
+                std: np.floating[Any] = np.std(list(clean_vals.values()))
                 if std > 0:
                     for t in tickers:
                         v = values.get(t)
                         result[t] = (v - mean) / std if v is not None else None
                     continue
-            
+
             # If sector normalization fails, use global fallback
             for t in tickers:
                 result[t] = None
 
         # Global fallback z-scoring
-        global_s = pd.Series(raw_scores, dtype=float)   
-        global_valid = global_s.dropna()
+        global_s: Series[float] = pd.Series(raw_scores, dtype=float)
+        global_valid: Series[float] = global_s.dropna()
 
         if len(global_valid) >= 2:
-            global_mean = global_valid.mean()
-            global_std= global_valid.std()
+            global_mean: float = global_valid.mean()
+            global_std: float = global_valid.std()
             global_z = (global_valid - global_mean) / global_std
 
             for t in self.universe:
                 if result.get(t) is None:
                     v = raw_scores.get(t)
                     result[t] = global_z[t] if t in global_z else None
-                    
+
         return result
- 
-    def value_score_calculator(self):
+
+    def value_score_calculator(self) -> dict:
         """
         Value factor Z-score calculation using multiple valuation signals.
         """
-        tickers = self.universe
+        tickers: list = self.universe
 
-        bm = {t: self.fundamental.get_book_to_market(yf.Ticker(t)) for t in tickers}
-        ep = {t: self.fundamental.get_ep(yf.Ticker(t)) for t in tickers}
-        cp = {t: self.fundamental.get_cp(yf.Ticker(t)) for t in tickers}
-        sp = {t: self.fundamental.get_sp(yf.Ticker(t)) for t in tickers}
+        bm: dict = {t: self.metrics[t].get("book_to_market") for t in tickers}
+        ep: dict = {t: self.metrics[t].get("earnings_to_price") for t in tickers}
+        cp: dict = {t: self.metrics[t].get("cashflow_to_price") for t in tickers}
+        sp: dict = {t: self.metrics[t].get("sales_to_price") for t in tickers}
 
         bm = self.winsorize(bm)
         ep = self.winsorize(ep)
         cp = self.winsorize(cp)
         sp = self.winsorize(sp)
 
-        z_bm = self.z_score_calculator(bm)
-        z_ep = self.z_score_calculator(ep)
-        z_cp = self.z_score_calculator(cp)
-        z_sp = self.z_score_calculator(sp)
+        z_bm: dict = self.z_score_calculator(bm)
+        z_ep: dict = self.z_score_calculator(ep)
+        z_cp: dict = self.z_score_calculator(cp)
+        z_sp: dict = self.z_score_calculator(sp)
 
-        scores={}
+        scores: dict = {}
 
         for t in tickers:
-            vals = [z_bm[t], z_ep[t], z_cp[t], z_sp[t]]
-            vals = [v for v in vals if v is not None]
+            vals: list = [z_bm[t], z_ep[t], z_cp[t], z_sp[t]]
+            vals: list = [v for v in vals if v is not None]
 
             scores[t] = np.mean(vals) if vals else None
 
-        return scores 
+        return scores
 
-    def size_score_calculator(self):
+    def size_score_calculator(self) -> dict:
         """
         Size factor Z-score calculation using inverse of log market capitalization.
         """
-        tickers = self.universe
+        tickers: list = self.universe
 
-        mc = {t: self.fundamental.get_market_cap(yf.Ticker(t)) for t in tickers}
+        mc: dict = {t: self.metrics[t].get("market_cap") for t in tickers}
 
-        mc_rev = {}
+        mc_rev: dict = {}
 
         for t, m in mc.items():
             if m is None or m <= 0:
@@ -140,107 +149,110 @@ class FactorCalculator:
         mc_rev = self.winsorize(mc_rev)
 
         return self.z_score_calculator(mc_rev)
-    
-    def momentum_score_calculator(self):
+
+    def momentum_score_calculator(self) -> dict:
         """
         Momentum factor Z-score calculation using momentum of different time frames.
         """
-        tickers = self.universe
+        tickers: list = self.universe
 
-        m12 = {t: self.fundamental.get_momentum(yf.Ticker(t)) for t in tickers}
-        m6 = {t: self.fundamental.get_6m_momentum(yf.Ticker(t)) for t in tickers}
-        m3 = {t: self.fundamental.get_3m_momentum(yf.Ticker(t)) for t in tickers}
+        m12: dict = {t: self.metrics[t].get("momentum_12_1") for t in tickers}
+        m6: dict = {t: self.metrics[t].get("momentum_6_1") for t in tickers}
+        m3: dict = {t: self.metrics[t].get("momentum_3_1") for t in tickers}
 
         m12 = self.winsorize(m12)
         m6 = self.winsorize(m6)
         m3 = self.winsorize(m3)
 
-        z_12 = self.z_score_calculator(m12)
-        z_6 = self.z_score_calculator(m6)
-        z_3 = self.z_score_calculator(m3)
+        z_12: dict = self.z_score_calculator(m12)
+        z_6: dict = self.z_score_calculator(m6)
+        z_3: dict = self.z_score_calculator(m3)
 
-        scores={}
+        scores: dict = {}
 
         for t in tickers:
-            vals = [z_12[t], z_6[t], z_3[t]]
-            vals = [v for v in vals if v is not None]
+            vals: list = [z_12[t], z_6[t], z_3[t]]
+            vals: list = [v for v in vals if v is not None]
 
             scores[t] = np.mean(vals) if vals else None
 
         return scores
-    
-    def lowvol_score_calculator(self):
+
+    def lowvol_score_calculator(self) -> dict:
         """
         Low-vol factor Z-score calculation using inverse of volatility.
         """
-        tickers = self.universe
+        tickers: list = self.universe
 
-        vol252 = {t: self.fundamental.get_volatility(yf.Ticker(t)) for t in tickers}
-        vol180 = {t: self.fundamental.get_vol_180(yf.Ticker(t)) for t in tickers}
+        vol252: dict = {t: self.metrics[t].get("volatility_252") for t in tickers}
+        vol180: dict = {t: self.metrics[t].get("volatility_180") for t in tickers}
 
-        vol252_r = {t: (-vol252[t] if vol252[t] is not None else None) for t in tickers}
-        vol180_r = {t: (-vol180[t] if vol180[t] is not None else None) for t in tickers}
+        vol252_r: dict = {
+            t: (-vol252[t] if vol252[t] is not None else None) for t in tickers
+        }
+        vol180_r: dict = {
+            t: (-vol180[t] if vol180[t] is not None else None) for t in tickers
+        }
 
         vol252_r = self.winsorize(vol252_r)
         vol180_r = self.winsorize(vol180_r)
 
-        z_252 = self.z_score_calculator(vol252_r)
-        z_180 = self.z_score_calculator(vol180_r)
+        z_252: dict = self.z_score_calculator(vol252_r)
+        z_180: dict = self.z_score_calculator(vol180_r)
 
-        scores={}
+        scores: dict = {}
 
         for t in tickers:
-            vals = [z_252[t], z_180[t]]
-            vals = [v for v in vals if v is not None]
+            vals: list = [z_252[t], z_180[t]]
+            vals: list = [v for v in vals if v is not None]
 
             scores[t] = np.mean(vals) if vals else None
 
         return scores
-    
-    def quality_score_calculator(self):
+
+    def quality_score_calculator(self) -> dict:
         """
         Quality factor Z-score calculation using profitability and leverage signals.
         """
-        tickers = self.universe
+        tickers: list = self.universe
 
-        roe = {t: self.fundamental.get_roe(yf.Ticker(t)) for t in tickers}
-        gp = {t: self.fundamental.get_gross_profitability(yf.Ticker(t)) for t in tickers}
-        pm = {t: self.fundamental.get_profit_margin(yf.Ticker(t)) for t in tickers}
-        lev = {t: self.fundamental.get_leverage(yf.Ticker(t)) for t in tickers}
+        roe: dict = {t: self.metrics[t].get("roe") for t in tickers}
+        gp: dict = {t: self.metrics[t].get("gross_profitability") for t in tickers}
+        pm: dict = {t: self.metrics[t].get("profit_margin") for t in tickers}
+        lev: dict = {t: self.metrics[t].get("leverage") for t in tickers}
 
-        lev_rev = {t: (-lev[t] if lev[t] is not None else None) for t in lev}
+        lev_rev: dict = {t: (-lev[t] if lev[t] is not None else None) for t in lev}
 
         roe = self.winsorize(roe)
         gp = self.winsorize(gp)
         pm = self.winsorize(pm)
         lev_rev = self.winsorize(lev_rev)
 
-        z_roe = self.z_score_calculator(roe)
-        z_gp = self.z_score_calculator(gp)
-        z_pm = self.z_score_calculator(pm)
-        z_lev = self.z_score_calculator(lev_rev)
+        z_roe: dict = self.z_score_calculator(roe)
+        z_gp: dict = self.z_score_calculator(gp)
+        z_pm: dict = self.z_score_calculator(pm)
+        z_lev: dict = self.z_score_calculator(lev_rev)
 
-        scores={}
+        scores: dict = {}
 
         for t in tickers:
-            vals = [z_roe[t], z_gp[t], z_pm[t], z_lev[t]]
-            vals = [v for v in vals if v is not None]
+            vals: list = [z_roe[t], z_gp[t], z_pm[t], z_lev[t]]
+            vals: list = [v for v in vals if v is not None]
 
             scores[t] = np.mean(vals) if vals else None
 
         return scores
-    
-    def market_risk_score_calculator(self):
+
+    def market_risk_score_calculator(self) -> dict:
         """
         Market Risk factor Z-score calculation using inverse of beta.
         """
-        tickers = self.universe
+        tickers: list = self.universe
 
-        beta = {t: self.fundamental.get_beta(yf.Ticker(t)) for t in tickers}
+        beta: dict = {t: self.metrics[t].get("beta") for t in tickers}
 
-        beta_rev = {t: (-beta[t] if beta[t] is not None else None) for t in beta}
+        beta_rev: dict = {t: (-beta[t] if beta[t] is not None else None) for t in beta}
 
         beta_rev = self.winsorize(beta_rev)
 
         return self.z_score_calculator(beta_rev)
-    

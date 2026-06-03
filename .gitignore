@@ -16,7 +16,6 @@ node_modules/
 
 # Local data cache (runtime-generated)
 data_store/
-backend/data_store/
 
 # IDEs
 .vscode/

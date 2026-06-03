@@ -108,6 +108,7 @@ Signals used:
 - **Multithreaded data fetching** for faster startup
 - **FastAPI backend** with clean REST endpoints
 - **Interactive React frontend** for real-time ranking
+- **Docker Compose setup** for running frontend and backend together
 
 
 ## System Architecture
@@ -128,6 +129,12 @@ Signals used:
 Multi-Factor-Stock-Ranking-Engine/
 │
 ├── backend/
+│   ├── Dockerfile
+│   │   # Backend container definition
+│   │
+│   ├── requirements.txt
+│   │   # Python backend dependencies
+│   │
 │   ├── api/
 │   │   └── main.py
 │   │       # FastAPI entry point and REST endpoints
@@ -140,17 +147,21 @@ Multi-Factor-Stock-Ranking-Engine/
 │   │   ├── provider.py
 │   │   │   # Unified interface for fetch → clean → cache logic
 │   │   ├── universe.py
-│   │   │   # Stock universe construction (S&P 500 filtering)
+│   │   │   # S&P 500 universe loading
 │   │   └── sp_500.csv
 │   │       # Base universe file
 │   │
 │   ├── data_store/
 │   │   └── storage.py
-│   │       # Local on-disk caching (Parquet + JSON)
+│   │       # Local on-disk caching utilities
 │   │
 │   ├── fundamentals/
 │   │   └── fundamental_calculator.py
-│   │       # Fundamental metric calculations (ROE, beta, momentum, etc.)
+│   │       # Fundamental metric calculations
+│   │
+│   ├── metrics/
+│   │   └── metric_builder.py
+│   │       # Derived metric cache construction
 │   │
 │   ├── factors/
 │   │   └── factor_model.py
@@ -163,6 +174,9 @@ Multi-Factor-Stock-Ranking-Engine/
 │   └── __init__.py
 │
 ├── frontend/
+│   ├── Dockerfile
+│   │   # Frontend container definition
+│   │
 │   ├── public/
 │   │   └── index.html
 │   │
@@ -177,70 +191,130 @@ Multi-Factor-Stock-Ranking-Engine/
 │   │   └── index.css
 │   │
 │   ├── package.json
-│   └── package-lock.json
+│   ├── package-lock.json
+│   └── .dockerignore
 │
-├── requirements.txt
-│   # Python dependencies
+├── data_store/
+│   # Local stock data cache generated at runtime
 │
+├── docker-compose.yml
+│   # Runs backend and frontend together
+│
+├── .dockerignore
+├── .gitignore
 ├── README.md
-│
-└── .gitignore
-
+└── LICENSE
 ```
 
 ## Setup and Running Instructions
 
-### 1. Clone the repository
-```
+### Option 1: Run with Docker Compose (Recommended)
+
+This is the simplest way to run the full application. It starts both the FastAPI backend and React frontend together.
+
+#### 1. Clone the repository
+```bash
 git clone https://github.com/prakhar2k06/Multi-Factor-Stock-Ranking-Engine.git
 cd Multi-Factor-Stock-Ranking-Engine
 ```
 
-### 2. Backend Setup (FastAPI)
-
-2.1 Creating and Activating Virtual Environment
-```
-python3 -m venv .venv
-source .venv/bin/activate      # macOS / Linux
-# .venv\Scripts\activate       # Windows
-```
-2.2 Installing Backend Dependencies
-```
-pip install -r requirements.txt
-```
-2.3 Starting the Backend Server
+#### 2. Build and start the application
 ```bash
-uvicorn api.main:app --reload
+docker compose up --build
 ```
-If successful you should see:
+
+Once the containers are running, open:
+
 ```
-Uvicorn running on http://127.0.0.1:8000
+Frontend: http://localhost:3000
+Backend API docs: http://localhost:8000/docs
 ```
-Please wait till you see this before sending requests (This may take 3 to 4 minutes):
+
+The backend may take a few minutes to finish loading cached factor data. Wait until the backend logs show:
+
 ```
 INFO:     Application startup complete.
 ```
 
-### 3. Frontend Setup (React)
+To stop the application, press `Ctrl+C` in the terminal running Docker Compose.
 
-3.1 Navigating to Frontend directory
+#### Notes on Docker
+
+- The backend runs on port `8000`.
+- The frontend runs on port `3000`.
+- The local `data_store/` directory is used for cached market data and derived metrics.
+- First startup may take longer if the cache is missing and market data needs to be fetched.
+- Subsequent runs are faster because raw data and derived metrics are cached locally.
+
+---
+
+### Option 2: Run Manually Without Docker
+
+#### 1. Clone the repository
+```bash
+git clone https://github.com/prakhar2k06/Multi-Factor-Stock-Ranking-Engine.git
+cd Multi-Factor-Stock-Ranking-Engine
+```
+
+#### 2. Backend Setup (FastAPI)
+
+Create and activate a virtual environment:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate      # macOS / Linux
+# .venv\Scripts\activate       # Windows
+```
+
+Install backend dependencies:
+
+```bash
+pip install -r backend/requirements.txt
+```
+
+Start the backend server from the project root:
+
+```bash
+uvicorn backend.api.main:app --reload
+```
+
+If successful, you should see:
+
+```
+Uvicorn running on http://127.0.0.1:8000
+```
+
+Please wait until you see this before sending requests (this could take 3 to 4 minutes):
+
+```
+INFO:     Application startup complete.
+```
+
+#### 3. Frontend Setup (React)
+
+In a separate terminal, navigate to the frontend directory:
+
 ```bash
 cd frontend
 ```
-3.2 Install Frontend Dependencies
-```
+
+Install frontend dependencies:
+
+```bash
 npm install
 ```
-3.3 Start the Frontend
-```
+
+Start the frontend:
+
+```bash
 npm start
 ```
+
 This will launch the frontend at:
+
 ```
 http://localhost:3000
 ```
-
-**Note: First run takes some time as data is being fetched. Subsequent runs are faster.**
 
 ## API Endpoints
 ### Retrieve Raw Factor Scores
@@ -265,15 +339,19 @@ Example Request Body
 ```
 
 ## Future Improvements
-- Historical backtesting engine
 - Portfolio Construction and weighting
 - Additional Factors
-- Support for Multiple Universes
-- Production Deployment (Docker)
+- Backend health/readiness endpoints
 
 ## License
 
 This project is licensed under the MIT License.
+
+## Disclaimer
+
+This project is for educational and research purposes only and does not constitute investment advice.
+
+
 
 ## Disclaimer
 

@@ -104,9 +104,11 @@ Signals used:
 - **Multi-signal factor score evaluation** for accurate scoring
 - **Sector-neutral z-scoring** to avoid sector bias
 - **Outlier clipping (winsorization)** for robust factor signals
-- **Cached data layer** for fast re-runs
+- **Multiple Cached data layer** for fast re-runs
+- **Multithreaded data fetching** for faster startup
 - **FastAPI backend** with clean REST endpoints
 - **Interactive React frontend** for real-time ranking
+
 
 ## System Architecture
 ### Backend:
@@ -214,7 +216,7 @@ If successful you should see:
 ```
 Uvicorn running on http://127.0.0.1:8000
 ```
-Please wait till you see this before sending requests:
+Please wait till you see this before sending requests (This may take 3 to 4 minutes):
 ```
 INFO:     Application startup complete.
 ```

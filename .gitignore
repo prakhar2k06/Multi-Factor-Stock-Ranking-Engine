@@ -20,3 +20,5 @@ data_store/
 # IDEs
 .vscode/
 .idea/
+
+.ruff_cache

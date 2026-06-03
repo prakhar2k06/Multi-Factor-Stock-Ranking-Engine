@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Slider, Button, Typography, Box, Grid, Paper } from "@mui/material";
+import { Slider, Button, Typography, Grid, Paper } from "@mui/material";
 
 export default function FactorWeightSliders({ onSubmit, disabled = false }) {
     const [weights, setWeights] = useState({

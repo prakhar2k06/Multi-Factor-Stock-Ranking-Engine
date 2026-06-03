@@ -125,7 +125,6 @@ CZR,Caesars Entertainment,Consumer Discretionary,Casinos & Gaming,"Reno, Nevada"
 D,Dominion Energy,Utilities,Multi-Utilities,"Richmond, Virginia",2016-11-30,715957,1983
 DAL,Delta Air Lines,Industrials,Passenger Airlines,"Atlanta, Georgia",2013-09-11,27904,1929
 DASH,DoorDash,Consumer Discretionary,Specialized Consumer Services,"San Francisco, California",2025-03-24,1792789,2012
-DAY,Dayforce,Industrials,Human Resource & Employment Services,"Minneapolis, Minnesota",2021-09-20,1725057,1992
 DD,DuPont,Materials,Specialty Chemicals,"Wilmington, Delaware",2019-06-03,1666700,2017 (1802)
 DDOG,Datadog,Information Technology,Application Software,"New York City, New York",2025-07-09,1561550,2010
 DE,Deere & Company,Industrials,Agricultural & Farm Machinery,"Moline, Illinois",1957-03-04,315189,1837
@@ -185,7 +184,6 @@ FDS,FactSet,Financials,Financial Exchanges & Data,"Norwalk, Connecticut",2021-12
 FDX,FedEx,Industrials,Air Freight & Logistics,"Memphis, Tennessee",1980-12-31,1048911,1971
 FE,FirstEnergy,Utilities,Electric Utilities,"Akron, Ohio",1997-11-28,1031296,1997
 FFIV,"F5, Inc.",Information Technology,Communications Equipment,"Seattle, Washington",2010-12-20,1048695,1996
-FI,Fiserv,Financials,Transaction & Payment Processing Services,"Brookfield, Wisconsin",2001-04-02,798354,1984
 FICO,Fair Isaac,Information Technology,Application Software,"Bozeman, Montana",2023-03-20,814547,1956
 FIS,Fidelity National Information Services,Financials,Transaction & Payment Processing Services,"Jacksonville, Florida",2006-11-10,1136893,1968
 FITB,Fifth Third Bancorp,Financials,Regional Banks,"Cincinnati, Ohio",1996-03-29,35527,1858
@@ -222,7 +220,6 @@ HD,Home Depot (The),Consumer Discretionary,Home Improvement Retail,"Atlanta, Geo
 HIG,Hartford (The),Financials,Property & Casualty Insurance,"Hartford, Connecticut",1957-03-04,874766,1810
 HII,Huntington Ingalls Industries,Industrials,Aerospace & Defense,"Newport News, Virginia",2018-01-03,1501585,2011
 HLT,Hilton Worldwide,Consumer Discretionary,"Hotels, Resorts & Cruise Lines","Tysons Corner, Virginia",2017-06-19,1585689,1919
-HOLX,Hologic,Health Care,Health Care Equipment,"Marlborough, Massachusetts",2016-03-30,859737,1985
 HON,Honeywell,Industrials,Industrial Conglomerates,"Charlotte, North Carolina",1957-03-04,773840,1906
 HPE,Hewlett Packard Enterprise,Information Technology,"Technology Hardware, Storage & Peripherals","Houston, Texas",2015-11-02,1645590,2015
 HPQ,HP Inc.,Information Technology,"Technology Hardware, Storage & Peripherals","Palo Alto, California",1974-12-31,47217,1939 (2015)
@@ -243,7 +240,6 @@ INTC,Intel,Information Technology,Semiconductors,"Santa Clara, California",1976-
 INTU,Intuit,Information Technology,Application Software,"Mountain View, California",2000-12-05,896878,1983
 INVH,Invitation Homes,Real Estate,Single-Family Residential REITs,"Dallas, Texas",2022-09-19,1687229,2012
 IP,International Paper,Materials,Paper & Plastic Packaging Products & Materials,"Memphis, Tennessee",1957-03-04,51434,1898
-IPG,Interpublic Group of Companies (The),Communication Services,Advertising,"New York City, New York",1992-10-01,51644,1961 (1930)
 IQV,IQVIA,Health Care,Life Sciences Tools & Services,"Durham, North Carolina",2017-08-29,1478242,1982
 IR,Ingersoll Rand,Industrials,Industrial Machinery & Supplies & Components,"Davidson, North Carolina",2020-03-03,1699150,1859
 IRM,Iron Mountain,Real Estate,Other Specialized REITs,"Boston, Massachusetts",2009-01-06,1020569,1951
@@ -258,7 +254,6 @@ JCI,Johnson Controls,Industrials,Building Products,"Cork, Ireland",2010-08-27,83
 JKHY,Jack Henry & Associates,Financials,Transaction & Payment Processing Services,"Monett, Missouri",2018-11-13,779152,1976
 JNJ,Johnson & Johnson,Health Care,Pharmaceuticals,"New Brunswick, New Jersey",1973-06-30,200406,1886
 JPM,JPMorgan Chase,Financials,Diversified Banks,"New York City, New York",1975-06-30,19617,2000 (1799 / 1871)
-K,Kellanova,Consumer Staples,Packaged Foods & Meats,"Chicago, Illinois",1989-09-11,55067,1906
 KDP,Keurig Dr Pepper,Consumer Staples,Soft Drinks & Non-alcoholic Beverages,"Burlington, Massachusetts",2022-06-21,1418135,1981
 KEY,KeyCorp,Financials,Regional Banks,"Cleveland, Ohio",1994-03-01,91576,1825
 KEYS,Keysight Technologies,Information Technology,Electronic Equipment & Instruments,"Santa Rosa, California",2018-11-06,1601046,2014 (1939)
@@ -308,7 +303,6 @@ MHK,Mohawk Industries,Consumer Discretionary,Home Furnishings,"Calhoun, Georgia"
 MKC,McCormick & Company,Consumer Staples,Packaged Foods & Meats,"Hunt Valley, Maryland",2003-03-20,63754,1889
 MKTX,MarketAxess,Financials,Financial Exchanges & Data,"New York City, New York",2019-07-01,1278021,2000
 MLM,Martin Marietta Materials,Materials,Construction Materials,"Raleigh, North Carolina",2014-07-02,916076,1993
-MMC,Marsh McLennan,Financials,Insurance Brokers,"New York City, New York",1987-08-31,62709,1905
 MMM,3M,Industrials,Industrial Conglomerates,"Saint Paul, Minnesota",1957-03-04,66740,1902
 MNST,Monster Beverage,Consumer Staples,Soft Drinks & Non-alcoholic Beverages,"Corona, California",2012-06-28,865752,2012 (1935)
 MO,Altria,Consumer Staples,Tobacco,"Richmond, Virginia",1957-03-04,764180,1985
@@ -478,7 +472,6 @@ VTRS,Viatris,Health Care,Pharmaceuticals,"Pittsburgh, Pennsylvania",2004-04-23,1
 VZ,Verizon,Communication Services,Integrated Telecommunication Services,"New York City, New York",1983-11-30,732712,1983 (1877)
 WAB,Wabtec,Industrials,Construction Machinery & Heavy Transportation Equipment,"Pittsburgh, Pennsylvania",2019-02-27,943452,1999 (1869)
 WAT,Waters Corporation,Health Care,Life Sciences Tools & Services,"Milford, Massachusetts",2002-01-02,1000697,1958
-WBA,Walgreens Boots Alliance,Consumer Staples,Drug Retail,"Deerfield, Illinois",1979-12-31,1618921,2014
 WBD,Warner Bros. Discovery,Communication Services,Broadcasting,"New York City, New York",2022-04-11,1437107,2022 (Warner Bros. 1923)
 WDAY,"Workday, Inc.",Information Technology,Application Software,"Pleasanton, California",2024-12-23,1327811,2005
 WDC,Western Digital,Information Technology,"Technology Hardware, Storage & Peripherals","San Jose, California",2009-07-01,106040,1970
